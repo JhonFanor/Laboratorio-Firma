@@ -70,7 +70,7 @@ class Program
                                         string? rutaArchivo = Console.ReadLine()?.Trim('"', '\''); 
                                         if (File.Exists(rutaArchivo))
                                         {
-                                            string nombreArchivo = Path.GetFileNameWithoutExtension(rutaArchivo);
+                                            string nombreArchivo = Path.GetFileName(rutaArchivo);
 
                                             string destino = Path.Combine(carpetaArchivos, nombreArchivo);
 
@@ -187,7 +187,75 @@ class Program
                                 }
                             case "3":
                                 {
-                                    Console.Clear();
+                                    try
+                                    {
+                                        string archivosPath = Path.Combine(Environment.CurrentDirectory, "Archivos");
+                                        string firmasPath = Path.Combine(Environment.CurrentDirectory, "Firmas");
+
+                                        if (!Directory.Exists(archivosPath))
+                                        {
+                                            Console.WriteLine("La carpeta 'Archivos' no existe. Por favor, sube o crea archivos primero.");
+                                            break;
+                                        }
+
+                                        Directory.CreateDirectory(firmasPath);
+
+                                        RSAParameters privateKeyParams = FromXmlString(File.ReadAllText("privateKey.txt"));
+
+                                        using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048))
+                                        {
+                                            rsa.ImportParameters(privateKeyParams);
+
+                                            string[] archivos = Directory.GetFiles(archivosPath);
+
+                                            if (archivos.Length == 0)
+                                            {
+                                                Console.WriteLine("No hay archivos en la carpeta 'Archivos' para firmar.");
+                                                break;
+                                            }
+
+                                            foreach (var archivo in archivos)
+                                            {
+                                                try
+                                                {
+                                                    string nombreArchivo = Path.GetFileName(archivo);
+
+                                                    // Leer contenido del archivo
+                                                    byte[] contenidoArchivo = File.ReadAllBytes(archivo);
+
+                                                    // Generar firma
+                                                    byte[] firma = rsa.SignData(contenidoArchivo, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+                                                    // Definir ruta de la firma
+                                                    string firmaPath = Path.Combine(firmasPath, $"{nombreArchivo}.firma");
+
+                                                    // Verificar si ya existe una firma y eliminarla
+                                                    if (File.Exists(firmaPath))
+                                                    {
+                                                        File.Delete(firmaPath);
+                                                        Console.WriteLine($"Firma existente para '{nombreArchivo}' eliminada.");
+                                                    }
+
+                                                    // Guardar la nueva firma
+                                                    File.WriteAllBytes(firmaPath, firma);
+                                                    Console.WriteLine($"Archivo '{nombreArchivo}' firmado exitosamente. Nueva firma guardada en: {firmaPath}");
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Console.WriteLine($"Error al firmar el archivo '{archivo}': {ex.Message}");
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch (CryptographicException e)
+                                    {
+                                        Console.WriteLine($"Error de criptografía: {e.Message}");
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine($"Error: {e.Message}");
+                                    }
+
                                     break;
                                 }
                             case "4":
@@ -208,11 +276,204 @@ class Program
                 }
             case "3":
                 {
-                    Console.WriteLine("Validar firmas:");
-                    Console.WriteLine("1. Listar archivos.");
-                    Console.WriteLine("2. Validar firma de un archivo.");
-                    Console.WriteLine("3. Validar firma de todos los archivos.");
-                    Console.WriteLine("4. Salir."); 
+                    var continuarValidacion = true;
+                    while (continuarValidacion)
+                    {
+                        Console.WriteLine("Validar firmas:");
+                        Console.WriteLine("1. Listar archivos.");
+                        Console.WriteLine("2. Validar firma de un archivo.");
+                        Console.WriteLine("3. Validar firma de todos los archivos.");
+                        Console.WriteLine("4. Volver al menú anterior.");
+                        string? opcionValidar = Console.ReadLine()?.Trim();
+
+                        switch (opcionValidar)
+                        {
+                            case "1":
+                                {
+                                    try
+                                    {
+                                        string archivosPath = Path.Combine(Environment.CurrentDirectory, "Archivos");
+
+                                        if (!Directory.Exists(archivosPath))
+                                        {
+                                            Console.WriteLine("La carpeta 'Archivos' no existe.");
+                                            break;
+                                        }
+
+                                        string[] archivos = Directory.GetFiles(archivosPath);
+
+                                        if (archivos.Length == 0)
+                                        {
+                                            Console.WriteLine("No hay archivos en la carpeta 'Archivos'.");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Archivos en la carpeta 'Archivos':");
+                                            foreach (var archivo in archivos)
+                                            {
+                                                Console.WriteLine($"- {Path.GetFileName(archivo)}");
+                                            }
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine($"Error: {e.Message}");
+                                    }
+                                    break;
+                                }
+
+                            case "2":
+                                {
+                                    try
+                                    {
+                                        string archivosPath = Path.Combine(Environment.CurrentDirectory, "Archivos");
+                                        string firmasPath = Path.Combine(Environment.CurrentDirectory, "Firmas");
+
+                                        Console.WriteLine("Escribe el nombre del archivo (con extensión):");
+                                        string? nombreArchivo = Console.ReadLine()?.Trim();
+
+                                        if (string.IsNullOrEmpty(nombreArchivo))
+                                        {
+                                            Console.WriteLine("El nombre del archivo no puede estar vacío.");
+                                            break;
+                                        }
+
+                                        string archivoPath = Path.Combine(archivosPath, nombreArchivo);
+                                        string firmaPath = Path.Combine(firmasPath, $"{nombreArchivo}.firma");
+
+                                        if (!File.Exists(archivoPath))
+                                        {
+                                            Console.WriteLine($"El archivo '{archivoPath}' no existe.");
+                                            break;
+                                        }
+
+                                        if (!File.Exists(firmaPath))
+                                        {
+                                            Console.WriteLine($"El archivo '{nombreArchivo}' no tiene firma.");
+                                            break;
+                                        }
+
+                                        // Validar firma
+                                        RSAParameters publicKeyParams = FromXmlString(File.ReadAllText("publicKey.txt"));
+
+                                        using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048))
+                                        {
+                                            rsa.ImportParameters(publicKeyParams);
+
+                                            byte[] contenidoArchivo = File.ReadAllBytes(archivoPath);
+                                            byte[] firmaArchivo = File.ReadAllBytes(firmaPath);
+
+                                            bool esValido = rsa.VerifyData(contenidoArchivo, firmaArchivo, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+                                            if (esValido)
+                                            {
+                                                Console.WriteLine($"La firma del archivo '{nombreArchivo}' es válida.");
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine($"La firma del archivo '{nombreArchivo}' no es válida.");
+                                            }
+                                        }
+                                    }
+                                    catch (CryptographicException e)
+                                    {
+                                        Console.WriteLine($"Error de criptografía: {e.Message}");
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine($"Error: {e.Message}");
+                                    }
+                                    break;
+                                }
+
+                            case "3":
+                                {
+                                    try
+                                    {
+                                        string archivosPath = Path.Combine(Environment.CurrentDirectory, "Archivos");
+                                        string firmasPath = Path.Combine(Environment.CurrentDirectory, "Firmas");
+
+                                        if (!Directory.Exists(archivosPath))
+                                        {
+                                            Console.WriteLine("La carpeta 'Archivos' no existe.");
+                                            break;
+                                        }
+
+                                        Directory.CreateDirectory(firmasPath);
+                                        string[] archivos = Directory.GetFiles(archivosPath);
+
+                                        if (archivos.Length == 0)
+                                        {
+                                            Console.WriteLine("No hay archivos en la carpeta 'Archivos'.");
+                                            break;
+                                        }
+
+                                        RSAParameters publicKeyParams = FromXmlString(File.ReadAllText("publicKey.txt"));
+
+                                        using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048))
+                                        {
+                                            rsa.ImportParameters(publicKeyParams);
+
+                                            foreach (var archivo in archivos)
+                                            {
+                                                string nombreArchivo = Path.GetFileName(archivo);
+                                                string firmaPath = Path.Combine(firmasPath, $"{nombreArchivo}.firma");
+
+                                                if (!File.Exists(firmaPath))
+                                                {
+                                                    Console.WriteLine($"El archivo '{nombreArchivo}' no tiene firma.");
+                                                    continue;
+                                                }
+
+                                                try
+                                                {
+                                                    byte[] contenidoArchivo = File.ReadAllBytes(archivo);
+                                                    byte[] firmaArchivo = File.ReadAllBytes(firmaPath);
+
+                                                    bool esValido = rsa.VerifyData(contenidoArchivo, firmaArchivo, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+                                                    if (esValido)
+                                                    {
+                                                        Console.WriteLine($"La firma del archivo '{nombreArchivo}' es válida.");
+                                                    }
+                                                    else
+                                                    {
+                                                        Console.WriteLine($"La firma del archivo '{nombreArchivo}' no es válida.");
+                                                    }
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Console.WriteLine($"Error al validar la firma del archivo '{nombreArchivo}': {ex.Message}");
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch (CryptographicException e)
+                                    {
+                                        Console.WriteLine($"Error de criptografía: {e.Message}");
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine($"Error: {e.Message}");
+                                    }
+                                    break;
+                                }
+
+                            case "4":
+                                {
+                                    continuarValidacion = false;
+                                    Console.Clear();
+                                    break;
+                                }
+
+                            default:
+                                {
+                                    Console.Clear();
+                                    Console.WriteLine("Elija una opción válida.");
+                                    break;
+                                }
+                        }
+                    }
                     break;
                 }
             case "4":
