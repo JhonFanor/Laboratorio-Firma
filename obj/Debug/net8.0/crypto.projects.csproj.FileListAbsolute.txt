@@ -1,0 +1,15 @@
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/bin/Debug/net8.0/crypto.projects
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/bin/Debug/net8.0/crypto.projects.deps.json
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/bin/Debug/net8.0/crypto.projects.runtimeconfig.json
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/bin/Debug/net8.0/crypto.projects.dll
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/bin/Debug/net8.0/crypto.projects.pdb
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/crypto.projects.GeneratedMSBuildEditorConfig.editorconfig
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/crypto.projects.AssemblyInfoInputs.cache
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/crypto.projects.AssemblyInfo.cs
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/crypto.projects.csproj.CoreCompileInputs.cache
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/crypto.projects.sourcelink.json
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/crypto.projects.dll
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/refint/crypto.projects.dll
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/crypto.projects.pdb
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/crypto.projects.genruntimeconfig.cache
+/home/jhon/Documentos/BlockChain/Laboratorio-Firma/obj/Debug/net8.0/ref/crypto.projects.dll
